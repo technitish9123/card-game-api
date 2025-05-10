@@ -1,6 +1,7 @@
 import express from "express";
 import { DeckService } from "./services/deck-service";
 import { DeckController } from "./controllers/deck-controller";
+import { HealthController } from "./controllers/health";
 
 /**
  * Main application class for initializing and starting the Express server.
@@ -35,13 +36,15 @@ class App {
   private initializeControllers(): void {
     const service = new DeckService();
     const controller = new DeckController(service);
+    const healthController = new HealthController();
 
     this.app.post("/decks", controller.createDeck);
     this.app.get("/decks/:deckId", controller.openDeck);
     this.app.post("/decks/:deckId/draw", controller.drawCards);
-    this.app.get("/health", (res: express.Response) => {
-      res.status(200).json({ status: "OK" });
-    });
+    this.app.get(
+      "/health",
+      healthController.checkHealth.bind(healthController)
+    );
   }
 
   /**
