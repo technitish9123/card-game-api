@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # Production service
+  card-api:
+    build: 
+      context: .
+      args:
+        NODE_ENV: production
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - card-game-net
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+
+  # Development service
+  dev:
+    build:
+      context: .
+      target: builder
+    command: npm run dev
+    volumes:
+      - ./src:/usr/src/app/src
+      - /usr/src/app/node_modules
+    ports:
+      - "3001:3000" # Different port to avoid conflict
+    environment:
+      - NODE_ENV=development
+      - DEBUG=card-game:*
+    networks:
+      - card-game-net
+    depends_on:
+      - redis # Example dependency
+
+volumes:
+  redis_data:
+
+networks:
+  card-game-net:
+    driver: bridge
